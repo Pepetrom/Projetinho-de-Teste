@@ -347,7 +347,8 @@ export class GameApp {
 
   public destroy() {
     this.input.destroy();
-    this.app.destroy(true, { children: true, texture: true, baseTexture: true });
+    // NÃO destrua as texturas (texture: true, baseTexture: true), senão o WebGL perde elas pro próximo jogo!
+    this.app.destroy(true, { children: true }); 
   }
 
 
