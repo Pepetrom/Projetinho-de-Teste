@@ -87,12 +87,12 @@ export default function App() {
                         alt="Pirate Battle" 
                         className="title-logo"/>
                         <button className="button"
-                            onClick={() => setScreen("GAME")}
-                        > Play
+                            onClick={() => setScreen("GAME")}> 
+                            Play
                         </button>
                         <button className="button secondary"
-                            onClick={() => setScreen("OPTIONS")}
-                        > Options
+                            onClick={() => setScreen("OPTIONS")}> 
+                            Options
                         </button>
                     </div>
                 </div>
@@ -105,16 +105,12 @@ export default function App() {
                             Options
                         </h1>
                         <div style={{ marginBottom: "1rem", width: "80%" }}>
-                            <label
-                                style={{
+                            <label style={{
                                     display: "block",
-                                    marginBottom: "0.5rem",
-                                }}
-                            >
+                                    marginBottom: "0.5rem" }}>
                                 Game Session Time (seconds): {matchDuration}
                             </label>
-                            <input
-                                type="range"
+                            <input type="range"
                                 min="60"
                                 max="180"
                                 step="10"
@@ -122,16 +118,13 @@ export default function App() {
                                 onChange={(e) =>
                                     setMatchDuration(Number(e.target.value))
                                 }
-                                style={{ width: "100%" }}
-                            />
+                                style={{ width: "100%" }}/>
                         </div>
                         <div style={{ marginBottom: "2rem", width: "80%" }}>
                             <label
                                 style={{
                                     display: "block",
-                                    marginBottom: "0.5rem",
-                                }}
-                            >
+                                    marginBottom: "0.5rem"}}>
                                 Enemy Spawn Time (seconds): {spawnInterval}
                             </label>
                             <input
@@ -143,8 +136,7 @@ export default function App() {
                                 onChange={(e) =>
                                     setSpawnInterval(Number(e.target.value))
                                 }
-                                style={{ width: "100%" }}
-                            />
+                                style={{ width: "100%" }}/>
                         </div>
                         <button className="button"
                             onClick={() => {
@@ -156,9 +148,7 @@ export default function App() {
                                     "spawnInterval",
                                     spawnInterval.toString()
                                 );
-                                setScreen("MENU");
-                            }}
-                        >
+                                setScreen("MENU");}}>
                             Save & Back
                         </button>
                     </div>
@@ -166,72 +156,76 @@ export default function App() {
             )}
 
             {(screen === "GAME" || screen === "PAUSE") && (
-                <div
-                    style={{
+                <div style={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         width: "100%",
                         height: "100%",
-                    }}
-                >
-                    <div
-                        ref={pixiContainerRef}
-                        style={{ width: "100%", height: "100%" }}
-                    />
-                    <div
-                        style={{
+                    }}>
+                    <div ref={pixiContainerRef}
+                        style={{ width: "100%", height: "100%" }}/>
+                    <div style={{
                             position: "absolute",
                             top: 20,
                             left: 20,
                             zIndex: 20,
                             color: "white",
-                            textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                        }}
-                    >
+                            textShadow: "0 2px 4px rgba(0,0,0,0.5)"}}>
                         <h2>Score: {score}</h2>
                         <h2>Time: {timeLeft}s</h2>
                     </div>
-                    <button className="button"
-                        style={{
+                    <button className="button" style={{
                             position: "absolute",
                             top: 20,
                             right: 20,
                             zIndex: 20,
                             padding: "0.5rem 1.5rem",
-                            fontSize: "1rem",
-                        }}
-                        onClick={() => setScreen("PAUSE")}
-                    >
+                            fontSize: "1rem"}}
+                        onClick={() => setScreen("PAUSE")}>
                         Pause
                     </button>
+
+                    <div style={{
+                        position: "absolute",
+                        bottom: 20,
+                        left: 20,
+                        zIndex: 20,
+                        background: "rgba(30, 41, 59, 0.7)",
+                        padding: "1rem",
+                        borderRadius: "12px",
+                        color: "white",
+                        fontFamily: "'Outfit', sans-serif",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        textShadow: "0 2px 4px rgba(0,0,0,0.5)"
+                    }}>
+                        <h3 style={{ marginBottom: "0.5rem", color: "#60a5fa" }}>🎮 Comandos:</h3>
+                        <p style={{ margin: "0.2rem 0" }}><b>WASD / Setas</b> : Mover e Girar</p>
+                        <p style={{ margin: "0.2rem 0" }}><b>Espaço</b> : Atirar (Frente)</p>
+                        <p style={{ margin: "0.2rem 0" }}><b>Q</b> / <b>E</b> : Atirar (Laterais)</p>
+                    </div>
                 </div>
             )}
 
             {screen === "PAUSE" && (
                 <div className="screen-container"
-                    style={{ background: "rgba(0,0,0,0.7)", zIndex: 30 }}
-                >
+                    style={{ background: "rgba(0,0,0,0.7)", zIndex: 30 }}>
                     <div className="panel" style={{ width: "600px", height: "600px" }}>
                         <h1 className="title" style={{ fontSize: "3rem" }}>
                             Paused
                         </h1>
-                        <button
-                            className="button"
-                            onClick={() => setScreen("GAME")}
-                        >
+                        <button className="button"
+                            onClick={() => setScreen("GAME")}>
                             Resume
                         </button>
-                        <button
-                            className="button"
+                        <button className="button"
                             onClick={() => {
                                 if (gameAppRef.current) {
                                     gameAppRef.current.destroy();
                                     gameAppRef.current = null;
                                 }
                                 setScreen("MENU");
-                            }}
-                        >
+                            }}>
                             Abandon Match
                         </button>
                     </div>
@@ -249,23 +243,18 @@ export default function App() {
                             Time Played: {resultTime}s
                         </h3>
                         {resultReason && (
-                            <p
-                                style={{
+                            <p style={{
                                     marginBottom: "2rem",
                                     color: "var(--negative)",
-                                }}
-                            >
+                                }}>
                                 {resultReason}
-                            </p>
-                        )}
+                            </p>)}
                         <button className="button"
-                            onClick={() => setScreen("GAME")}
-                        >
+                            onClick={() => setScreen("GAME")}>
                             Play Again
                         </button>
                         <button className="button"
-                            onClick={() => setScreen("MENU")}
-                        >
+                            onClick={() => setScreen("MENU")}>
                             Main Menu
                         </button>
                     </div>

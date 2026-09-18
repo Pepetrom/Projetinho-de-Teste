@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { GameConfig } from './GameConfig';
 import { InputManager } from './InputManager';
-import { Player, Chaser, Shooter, Projectile, Enemy } from './Entities';
+import { Player, Chaser, Shooter, Projectile, Enemy, Explosion } from './Entities';
 import { circleIntersect, distance, angleBetween } from './Utils';
 
 export class GameApp {
@@ -20,7 +20,8 @@ export class GameApp {
 
   private gameContainer: PIXI.Container;
   private islandSprite!: PIXI.Sprite;
-  private waterBackground!: PIXI.Sprite;
+  private waterBackgroundUnder!: PIXI.TilingSprite;
+  private waterBackground!: PIXI.TilingSprite;
 
   constructor(
     parent: HTMLElement, 
@@ -43,27 +44,53 @@ export class GameApp {
   }
 
   private async init() {
-    // Load assets
-    PIXI.Assets.add('player', '/assets/png/default/ships/ship_1.png');
-    PIXI.Assets.add('chaser', '/assets/png/default/ships/ship_2.png');
-    PIXI.Assets.add('shooter', '/assets/png/default/ships/ship_3.png');
-    PIXI.Assets.add('projectile', '/assets/png/default/ship_parts/cannon_ball.png');
-    PIXI.Assets.add('water', '/assets/png/default/tiles/tile_73.png');
-    PIXI.Assets.add('island', '/assets/png/default/tiles/tile_69.png');
+    await PIXI.Assets.load('/assets/spritesheet/ShipsSheet.json');
+    await PIXI.Assets.load('/assets/tilesheet/spritesheet.json');
+    await PIXI.Assets.load([
+      '/assets/png/default/effects/explosion_1.png',
+      '/assets/png/default/effects/explosion_2.png',
+      '/assets/png/default/effects/explosion_3.png',
+      '/assets/png/default/effects/fire_1.png',
+      '/assets/png/default/effects/fire_2.png'
+    ]);
 
-    const textures = await PIXI.Assets.load(['player', 'chaser', 'shooter', 'projectile', 'island','water']);
-    this.textures = textures;
+    this.textures = {
+      player: PIXI.Texture.from('ship_1.png'),
+      chaser: PIXI.Texture.from('ship_2.png'),
+      shooter: PIXI.Texture.from('ship_3.png'),
+      projectile: PIXI.Texture.from('cannon_ball.png'),
+      water: PIXI.Texture.from('tile_73.png'),
+      island: PIXI.Texture.from('tile_4.png')
+    };
 
-    // Criar o Fundo do Mar com TilingSprite
-    this.waterBackground = new PIXI.Sprite(textures.water);
-    this.waterBackground.anchor.set(0.5);
-    this.waterBackground.scale.set(25);
-    this.waterBackground.x = this.app.screen.width / 2;
-    this.waterBackground.y = this.app.screen.height / 2;
+
+    this.waterBackground = new PIXI.TilingSprite(
+      this.textures.water,
+      this.app.screen.width,  
+      this.app.screen.height  
+    );
+    this.waterBackground.alpha = 0.5;
+    this.waterBackground.tileScale.set(2); 
+    this.waterBackground.tint = 0x0006FF;
     this.gameContainer.addChild(this.waterBackground);
 
+    this.waterBackgroundUnder = new PIXI.TilingSprite(
+      this.textures.water,
+      this.app.screen.width,  
+      this.app.screen.height  
+    );
+    this.waterBackgroundUnder.alpha = 0.5;
+    this.waterBackgroundUnder.tileScale.set(2); 
+
+    this.waterBackgroundUnder.rotation = Math.PI;
+
+    this.waterBackgroundUnder.x = this.app.screen.width;
+    this.waterBackgroundUnder.y = this.app.screen.height;
+
+    this.gameContainer.addChild(this.waterBackgroundUnder);
+
     // Create Island 
-    this.islandSprite = new PIXI.Sprite(textures.island);
+    this.islandSprite = new PIXI.Sprite(this.textures.island);
     this.islandSprite.anchor.set(0.5);
     this.islandSprite.scale.set(1);
     this.islandSprite.x = this.app.screen.width / 2;
@@ -71,7 +98,7 @@ export class GameApp {
     this.gameContainer.addChild(this.islandSprite);
 
     // Create Player
-    this.player = new Player(textures.player, this.gameContainer);
+    this.player = new Player(this.gameContainer);
     this.player.x = 200;
     this.player.y = 200;
 
@@ -95,12 +122,30 @@ export class GameApp {
     this.checkCollisions();
 
     if (this.player.isDead) {
+      if (!this.player.sprite.destroyed) {
+         new Explosion(this.gameContainer, this.player.x, this.player.y);
+      }
       this.endGame('Destroyed');
     }
 
     // Keep player in bounds
     this.player.x = Math.max(0, Math.min(this.player.x, this.app.screen.width));
     this.player.y = Math.max(0, Math.min(this.player.y, this.app.screen.height));
+
+    // Animação e redimensionamento da camada superior da água
+    this.waterBackground.width = this.app.screen.width;
+    this.waterBackground.height = this.app.screen.height;
+    this.waterBackground.tilePosition.x -= 0.5 * delta;
+    this.waterBackground.tilePosition.y -= 0.5 * delta;
+
+    // Animação, redimensionamento e reposicionamento da camada inferior
+    this.waterBackgroundUnder.width = this.app.screen.width;
+    this.waterBackgroundUnder.height = this.app.screen.height;
+    this.waterBackgroundUnder.x = this.app.screen.width; 
+    this.waterBackgroundUnder.y = this.app.screen.height;
+    // Move em direções e velocidades diferentes para dar o efeito de profundidade (Parallax)
+    this.waterBackgroundUnder.tilePosition.x += 0.3 * delta;
+    this.waterBackgroundUnder.tilePosition.y -= 0.2 * delta;
 
     this.onUpdateHUD(this.score, Math.ceil(this.matchTime));
   }
@@ -139,7 +184,7 @@ export class GameApp {
       this.player.frontCooldown = GameConfig.playerFrontCooldown;
     }
     
-    // Side shooting (e.g. Q and E)
+    // Side shooting
     if (this.input.isKeyDown('KeyQ') && this.player.sideCooldown <= 0) {
       this.shootSide(-Math.PI / 2);
       this.player.sideCooldown = GameConfig.playerSideCooldown;
@@ -155,10 +200,9 @@ export class GameApp {
   private shootSide(angleOffset: number) {
     const angle = this.player.rotation + angleOffset;
     for (let i = -1; i <= 1; i++) {
-      const offsetAmt = i * 20;
-      // offset the starting position of the 3 parallel projectiles
-      const px = this.player.x + Math.cos(this.player.rotation) * offsetAmt;
-      const py = this.player.y + Math.sin(this.player.rotation) * offsetAmt;
+      const offset = i * 20;
+      const px = this.player.x + Math.cos(this.player.rotation) * offset;
+      const py = this.player.y + Math.sin(this.player.rotation) * offset;
       this.shootProjectile(px, py, angle, true);
     }
   }
@@ -181,7 +225,7 @@ export class GameApp {
       const distToPlayer = distance(enemy.x, enemy.y, this.player.x, this.player.y);
       const angleToPlayer = angleBetween(enemy.x, enemy.y, this.player.x, this.player.y);
       
-      // Rotate towards player smoothly
+      // Rotate towards player
       const targetRotation = angleToPlayer;
       let diff = targetRotation - enemy.rotation;
       while (diff < -Math.PI) diff += Math.PI * 2;
@@ -215,7 +259,7 @@ export class GameApp {
 
   private spawnEnemy() {
     const isChaser = Math.random() > 0.5;
-    const enemy = isChaser ? new Chaser(this.textures.chaser, this.gameContainer) : new Shooter(this.textures.shooter, this.gameContainer);
+    const enemy = isChaser ? new Chaser(this.gameContainer) : new Shooter(this.gameContainer);
     
     let sx, sy;
     do {
@@ -233,8 +277,7 @@ export class GameApp {
       const proj = this.projectiles[i];
       if (proj.isDead ||
           proj.x < 0 || proj.x > this.app.screen.width ||
-          proj.y < 0 || proj.y > this.app.screen.height ||
-          distance(proj.x, proj.y, this.islandSprite.x, this.islandSprite.y) < 80)
+          proj.y < 0 || proj.y > this.app.screen.height )
       {
         proj.destroy();
         this.projectiles.splice(i, 1);
@@ -259,15 +302,22 @@ export class GameApp {
         for (const enemy of this.enemies) {
           if (!enemy.isDead && circleIntersect(proj.x, proj.y, proj.radius, enemy.x, enemy.y, enemy.radius)) {
             proj.isDead = true;
+            const enemyX = enemy.x;
+            const enemyY = enemy.y;
+            
             enemy.takeDamage(proj.damage);
-            if (enemy.isDead) this.score++;
+            
+            if (enemy.isDead) {
+              this.score++;
+              new Explosion(this.gameContainer, enemyX, enemyY);
+            }
             break;
           }
         }
       } else {
         if (circleIntersect(proj.x, proj.y, proj.radius, this.player.x, this.player.y, this.player.radius)) {
           proj.isDead = true;
-          this.player.takeDamage(GameConfig.shooterDamage); // Assuming uniform damage or fetch from shooter
+          this.player.takeDamage(GameConfig.shooterDamage); 
         }
       }
     }
