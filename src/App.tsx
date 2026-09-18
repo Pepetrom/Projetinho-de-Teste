@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { GameApp } from "./game/GameApp";
 import { GameConfig } from "./game/GameConfig";
 
-type Screen = "MENU" | "OPTIONS" | "GAME" | "RESULT" | "PAUSE";
+type Screen = "MENU" | "OPTIONS" | "GAME" | "RESULT" | "PAUSE" | "COMING_SOON";
 
 const simulateKey = (code: string, type: 'keydown' | 'keyup') => {
     window.dispatchEvent(new KeyboardEvent(type, { code }));
@@ -17,11 +17,12 @@ const TouchButton = ({ code, label, style = {} }: any) => (
         onMouseLeave={() => simulateKey(code, 'keyup')}
         style={{
             userSelect: 'none',
+            touchAction: 'none',
             background: 'rgba(255,255,255,0.2)',
             border: '2px solid rgba(255,255,255,0.5)',
             borderRadius: '50%',
-            width: 50,
-            height: 50,
+            width: 'clamp(35px, 10vw, 55px)',
+            height: 'clamp(35px, 10vw, 55px)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -29,6 +30,7 @@ const TouchButton = ({ code, label, style = {} }: any) => (
             fontWeight: 'bold',
             backdropFilter: 'blur(4px)',
             cursor: 'pointer',
+            fontSize: 'clamp(0.7rem, 2.5vw, 1rem)',
             ...style
         }}
     >
@@ -56,6 +58,16 @@ export default function App() {
         const savedSpawn = localStorage.getItem("spawnInterval");
         if (savedDuration) setMatchDuration(Number(savedDuration));
         if (savedSpawn) setSpawnInterval(Number(savedSpawn));
+        
+        const handleVisibilityChange = () => {
+            if (document.hidden && screen === "GAME") {
+                setScreen("PAUSE");
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, []);
 
     // Main Game update
@@ -90,51 +102,55 @@ export default function App() {
         };
     }, [screen]);
 
-    useEffect(() => {
-        const handleBlur = () => {
-            if (screen === "GAME") {
-                setScreen("PAUSE");
-            }
-        };
-        const handleVisibilityChange = () => {
-            if (document.hidden && screen === "GAME") {
-                setScreen("PAUSE");
-            }
-        };
-        window.addEventListener("blur", handleBlur);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return () => {
-            window.removeEventListener("blur", handleBlur);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [screen]);
-
     // Controlls Pause and Resume, changing the gameTime
     useEffect(() => {
         if (gameAppRef.current) {
-            if (screen === "PAUSE") {
-                gameAppRef.current.app.ticker.stop();
-            } else if (screen === "GAME") {
-                gameAppRef.current.app.ticker.start();
-            }
+            gameAppRef.current.isGameOver = (screen !== "GAME");
         }
     }, [screen]);
 
     return (
         <>
             {screen === "MENU" && (
-                <div className="screen-container ">
-                    <div className="panel" style={{ width: "600px", height: "600px" }}>
-                        <img src="/assets/png/default/ui/menu/title_pirate_battle.png"
-                        alt="Pirate Battle" 
-                        className="title-logo"/>
-                        <button className="button"
-                            onClick={() => setScreen("GAME")}> 
-                            Play
-                        </button>
-                        <button className="button secondary"
-                            onClick={() => setScreen("OPTIONS")}> 
-                            Options
+                <div className="screen-container">
+                    <div className="panel" style={{ width: "min(95vw, 800px)", maxHeight: "95vh", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+                        <img 
+                            src="/assets/png/default/ui/menu/title_pirate_battle.png"
+                            alt="Pirate Battle" 
+                            style={{ width: "100%", maxWidth: "450px", height: "auto", display: "block", margin: "0 auto 2rem auto" }}
+                        />
+                        
+                        <div className="menu-buttons" style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", maxWidth: "300px", margin: "0 auto 2rem auto" }}>
+                            <button className="button" onClick={() => setScreen("GAME")}>
+                                Play Game
+                            </button>
+                            <button className="button secondary" onClick={() => setScreen("OPTIONS")}>
+                                Options
+                            </button>
+                        </div>
+
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center" }}>
+                            <button className="button terciary" onClick={() => setScreen("COMING_SOON")}>
+                                Ranking
+                            </button>
+                            <button className="button terciary" onClick={() => setScreen("COMING_SOON")}>
+                                Match History
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {screen === "COMING_SOON" && (
+                <div className="screen-container">
+                    <div className="panel" style={{ width: "min(95vw, 800px)", maxHeight: "95vh", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+                        <h1 className="title" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>Coming Soon</h1>
+                        <p style={{ marginBottom: "2rem", color: "#94a3b8", textAlign: "center", fontSize: "1.1rem" }}>
+                            This feature is currently under development. Stay tuned for future updates!
+                        </p>
+                        
+                        <button className="button" onClick={() => setScreen("MENU")}>
+                            Back to Menu
                         </button>
                     </div>
                 </div>
@@ -142,101 +158,95 @@ export default function App() {
 
             {screen === "OPTIONS" && (
                 <div className="screen-container">
-                    <div className="panel" style={{ width: "600px", height: "600px" }}>
-                        <h1 className="title" style={{ fontSize: "3rem" }}>
-                            Options
-                        </h1>
-                        <div style={{ marginBottom: "1rem", width: "80%" }}>
-                            <label style={{
-                                    display: "block",
-                                    marginBottom: "0.5rem" }}>
+                    <div className="panel" style={{ width: "min(95vw, 600px)", maxHeight: "95vh", overflowY: "auto", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+                        <h1 className="title" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>Options</h1>
+                        
+                        <div style={{ marginBottom: "2rem" }}>
+                            <label style={{ display: "block", marginBottom: "0.5rem", color: "#e2e8f0" }}>
                                 Game Session Time (seconds): {matchDuration}
                             </label>
-                            <input type="range"
-                                min="60"
-                                max="180"
+                            <input 
+                                type="range" 
+                                min="60" 
+                                max="180" 
                                 step="10"
                                 value={matchDuration}
-                                onChange={(e) =>
-                                    setMatchDuration(Number(e.target.value))
-                                }
-                                style={{ width: "100%" }}/>
+                                onChange={(e) => setMatchDuration(Number(e.target.value))}
+                                style={{ width: "100%" }}
+                            />
                         </div>
-                        <div style={{ marginBottom: "2rem", width: "80%" }}>
-                            <label
-                                style={{
-                                    display: "block",
-                                    marginBottom: "0.5rem"}}>
-                                Enemy Spawn Time (seconds): {spawnInterval}
+
+                        <div style={{ marginBottom: "3rem" }}>
+                            <label style={{ display: "block", marginBottom: "0.5rem", color: "#e2e8f0" }}>
+                                Enemy Spawn Time (seconds): {spawnInterval.toFixed(1)}
                             </label>
-                            <input
-                                type="range"
-                                min="0.5"
-                                max="5.0"
+                            <input 
+                                type="range" 
+                                min="1.0" 
+                                max="10.0" 
                                 step="0.5"
                                 value={spawnInterval}
-                                onChange={(e) =>
-                                    setSpawnInterval(Number(e.target.value))
-                                }
-                                style={{ width: "100%" }}/>
+                                onChange={(e) => setSpawnInterval(Number(e.target.value))}
+                                style={{ width: "100%" }}
+                            />
                         </div>
-                        <button className="button"
-                            onClick={() => {
-                                localStorage.setItem(
-                                    "matchDuration",
-                                    matchDuration.toString()
-                                );
-                                localStorage.setItem(
-                                    "spawnInterval",
-                                    spawnInterval.toString()
-                                );
-                                setScreen("MENU");}}>
+
+                        <button className="button" onClick={() => {
+                            localStorage.setItem("matchDuration", matchDuration.toString());
+                            localStorage.setItem("spawnInterval", spawnInterval.toString());
+                            setScreen("MENU");
+                        }}>
                             Save & Back
                         </button>
                     </div>
                 </div>
             )}
 
-            {(screen === "GAME" || screen === "PAUSE") && (
+            {screen === "GAME" && (
                 <div style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                    }}>
-                    <div ref={pixiContainerRef}
-                        style={{ width: "100%", height: "100%" }}/>
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                }}>
+                    <div ref={pixiContainerRef} style={{ width: "100%", height: "100%" }} />
+                    
                     <div style={{
-                            position: "absolute",
-                            top: 20,
-                            left: 20,
-                            zIndex: 20,
-                            color: "white",
-                            textShadow: "0 2px 4px rgba(0,0,0,0.5)"}}>
-                        <h2>Score: {score}</h2>
-                        <h2>Time: {timeLeft}s</h2>
+                        position: "absolute",
+                        top: 20,
+                        left: 20,
+                        zIndex: 20,
+                        color: "white",
+                        fontFamily: "'Outfit', sans-serif",
+                        fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+                        fontWeight: "bold",
+                        textShadow: "2px 2px 4px rgba(0,0,0,0.8)"
+                    }}>
+                        Score: {score} <br/>
+                        Time: {timeLeft}s
                     </div>
+
                     <button className="button" style={{
                             position: "absolute",
                             top: 20,
                             right: 20,
                             zIndex: 20,
                             padding: "0.5rem 1.5rem",
-                            fontSize: "1rem"}}
+                            fontSize: "clamp(0.8rem, 2vw, 1rem)"}}
                         onClick={() => setScreen("PAUSE")}>
                         Pause
                     </button>
 
                     {isTouch ? (
                         <>
-                            <div className="mobile-controls" style={{ position: "absolute", bottom: 20, right: 20, zIndex: 30, display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                            <div className="mobile-controls" style={{ position: "absolute", bottom: "clamp(10px, 3vw, 20px)", right: "clamp(10px, 3vw, 20px)", zIndex: 30, display: "flex", gap: "clamp(5px, 2vw, 10px)", alignItems: "flex-end" }}>
                                 <TouchButton code="KeyQ" label="Q" />
-                                <TouchButton code="Space" label="FIRE" style={{ width: 70, height: 70, background: 'rgba(239,68,68,0.5)', border: '2px solid rgba(239,68,68,0.8)' }} />
+                                <TouchButton code="Space" label="FIRE" style={{ width: 'clamp(50px, 15vw, 75px)', height: 'clamp(50px, 15vw, 75px)', background: 'rgba(239,68,68,0.5)', border: '2px solid rgba(239,68,68,0.8)', fontSize: 'clamp(0.8rem, 3vw, 1.2rem)' }} />
                                 <TouchButton code="KeyE" label="E" />
                             </div>
-                            <div className="mobile-controls" style={{ position: "absolute", bottom: 20, left: 20, zIndex: 30 }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 50px)', gap: '5px' }}>
+                            <div className="mobile-controls" style={{ position: "absolute", bottom: "clamp(10px, 3vw, 20px)", left: "clamp(10px, 3vw, 20px)", zIndex: 30 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, clamp(35px, 10vw, 55px))', gap: 'clamp(2px, 1vw, 5px)' }}>
                                     <div /> <TouchButton code="KeyW" label="W" /> <div />
                                     <TouchButton code="KeyA" label="A" /> <TouchButton code="KeyS" label="S" /> <TouchButton code="KeyD" label="D" />
                                 </div>
@@ -268,12 +278,13 @@ export default function App() {
             {screen === "PAUSE" && (
                 <div className="screen-container"
                     style={{ background: "rgba(0,0,0,0.7)", zIndex: 30 }}>
-                    <div className="panel" style={{ width: "600px", height: "600px" }}>
-                        <h1 className="title" style={{ fontSize: "3rem" }}>
+                    <div className="panel" style={{ width: "min(95vw, 600px)", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+                        <h1 className="title" style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}>
                             Paused
                         </h1>
-                        <button className="button"
-                            onClick={() => setScreen("GAME")}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <button className="button"
+                                onClick={() => setScreen("GAME")}>
                             Resume
                         </button>
                         <button className="button"
@@ -286,14 +297,15 @@ export default function App() {
                             }}>
                             Abandon Match
                         </button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {screen === "RESULT" && (
                 <div className="screen-container">
-                    <div className="panel" style={{ width: "600px", height: "600px" }}>
-                        <h1 className="title" style={{ fontSize: "3rem" }}>
+                    <div className="panel" style={{ width: "min(95vw, 600px)", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+                        <h1 className="title" style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}>
                             Game Over
                         </h1>
                         <h2 style={{ marginBottom: "1rem" }}>Score: {score}</h2>
@@ -307,14 +319,16 @@ export default function App() {
                                 }}>
                                 {resultReason}
                             </p>)}
-                        <button className="button"
-                            onClick={() => setScreen("GAME")}>
-                            Play Again
-                        </button>
-                        <button className="button"
-                            onClick={() => setScreen("MENU")}>
-                            Main Menu
-                        </button>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <button className="button"
+                                onClick={() => setScreen("GAME")}>
+                                Play Again
+                            </button>
+                            <button className="button"
+                                onClick={() => setScreen("MENU")}>
+                                Main Menu
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

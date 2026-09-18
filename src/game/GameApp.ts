@@ -16,7 +16,7 @@ export class GameApp {
   private matchTime: number = GameConfig.matchDuration;
   private score: number = 0;
   private spawnTimer: number = 0;
-  private isGameOver: boolean = false;
+  public isGameOver: boolean = false;
 
   private gameContainer: PIXI.Container;
   private islandSprite!: PIXI.Sprite;
