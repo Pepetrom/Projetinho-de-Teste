@@ -4,7 +4,40 @@ import { GameConfig } from "./game/GameConfig";
 
 type Screen = "MENU" | "OPTIONS" | "GAME" | "RESULT" | "PAUSE";
 
+const simulateKey = (code: string, type: 'keydown' | 'keyup') => {
+    window.dispatchEvent(new KeyboardEvent(type, { code }));
+};
+
+const TouchButton = ({ code, label, style = {} }: any) => (
+    <div
+        onTouchStart={(e) => { e.preventDefault(); simulateKey(code, 'keydown'); }}
+        onTouchEnd={(e) => { e.preventDefault(); simulateKey(code, 'keyup'); }}
+        onMouseDown={() => simulateKey(code, 'keydown')}
+        onMouseUp={() => simulateKey(code, 'keyup')}
+        onMouseLeave={() => simulateKey(code, 'keyup')}
+        style={{
+            userSelect: 'none',
+            background: 'rgba(255,255,255,0.2)',
+            border: '2px solid rgba(255,255,255,0.5)',
+            borderRadius: '50%',
+            width: 50,
+            height: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            backdropFilter: 'blur(4px)',
+            cursor: 'pointer',
+            ...style
+        }}
+    >
+        {label}
+    </div>
+);
+
 export default function App() {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const [screen, setScreen] = useState<Screen>("MENU");
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(0);
@@ -195,24 +228,40 @@ export default function App() {
                         Pause
                     </button>
 
-                    <div style={{
-                        position: "absolute",
-                        bottom: 20,
-                        left: 20,
-                        zIndex: 20,
-                        background: "rgba(30, 41, 59, 0.7)",
-                        padding: "1rem",
-                        borderRadius: "12px",
-                        color: "white",
-                        fontFamily: "'Outfit', sans-serif",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                        textShadow: "0 2px 4px rgba(0,0,0,0.5)"
-                    }}>
-                        <h3 style={{ marginBottom: "0.5rem", color: "#60a5fa" }}>🎮 Comandos:</h3>
-                        <p style={{ margin: "0.2rem 0" }}><b>WASD / Setas</b> : Mover e Girar</p>
-                        <p style={{ margin: "0.2rem 0" }}><b>Espaço</b> : Atirar (Frente)</p>
-                        <p style={{ margin: "0.2rem 0" }}><b>Q</b> / <b>E</b> : Atirar (Laterais)</p>
-                    </div>
+                    {isTouch ? (
+                        <>
+                            <div className="mobile-controls" style={{ position: "absolute", bottom: 20, right: 20, zIndex: 30, display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                                <TouchButton code="KeyQ" label="Q" />
+                                <TouchButton code="Space" label="FIRE" style={{ width: 70, height: 70, background: 'rgba(239,68,68,0.5)', border: '2px solid rgba(239,68,68,0.8)' }} />
+                                <TouchButton code="KeyE" label="E" />
+                            </div>
+                            <div className="mobile-controls" style={{ position: "absolute", bottom: 20, left: 20, zIndex: 30 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 50px)', gap: '5px' }}>
+                                    <div /> <TouchButton code="KeyW" label="W" /> <div />
+                                    <TouchButton code="KeyA" label="A" /> <TouchButton code="KeyS" label="S" /> <TouchButton code="KeyD" label="D" />
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{
+                            position: "absolute",
+                            bottom: 20,
+                            left: 20,
+                            zIndex: 20,
+                            background: "rgba(30, 41, 59, 0.7)",
+                            padding: "1rem",
+                            borderRadius: "12px",
+                            color: "white",
+                            fontFamily: "'Outfit', sans-serif",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                            textShadow: "0 2px 4px rgba(0,0,0,0.5)"
+                        }}>
+                            <h3 style={{ marginBottom: "0.5rem", color: "#60a5fa" }}>🎮 Comandos:</h3>
+                            <p style={{ margin: "0.2rem 0" }}><b>WASD / Setas</b> : Mover e Girar</p>
+                            <p style={{ margin: "0.2rem 0" }}><b>Espaço</b> : Atirar (Frente)</p>
+                            <p style={{ margin: "0.2rem 0" }}><b>Q</b> / <b>E</b> : Atirar (Laterais)</p>
+                        </div>
+                    )}
                 </div>
             )}
 

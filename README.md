@@ -25,9 +25,7 @@ Em virtude da forte restrição de tempo do desafio, precisei tomar decisões es
    *A infraestrutura de arquitetura previa o uso de React Query com Axios para buscar e hidratar os dados das abas de "Ranking" e "Histórico". A ideia original era criar handlers do Mock Service Worker (MSW) para simular delays e paginação na API, garantindo robustez de rede local. Abandonei essa task nos minutos finais para garantir o deploy.*
 2. **Testes E2E com Playwright:**
    *Testar um Canvas contínuo com regressão visual é complexo. Com mais tempo, eu implementaria fixtures no Playwright injetando estados na `window` para testar lógicas determinísticas, além de testar todo o fluxo de formulários, salvamento de Options e navegação de menus.*
-3. **Controles Mobile (On-Screen Touch):**
-   *A arena ajusta sua escala dinamicamente e responde de maneira fluida, mas a implementação de um D-Pad virtual (Touch) para os dois polegares (movimento e tiro) seria fundamental para a usabilidade em dispositivos móveis.*
-4. **Otimização de Colisões:**
+3. **Otimização de Colisões:**
    *Substituir a colisão radial/circular simples por uma colisão baseada em SAT (Separating Axis Theorem) ou um grid espacial simples, para que ilhas maiores funcionassem com caixas delimitadoras (AABB) exatas.*
 
 ## 🛠️ Como rodar o projeto localmente
