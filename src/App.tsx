@@ -266,7 +266,7 @@ export default function App() {
                             border: "1px solid rgba(255, 255, 255, 0.1)",
                             textShadow: "0 2px 4px rgba(0,0,0,0.5)"
                         }}>
-                            <h3 style={{ marginBottom: "0.5rem", color: "#60a5fa" }}>🎮 Comandos:</h3>
+                            <h3 style={{ marginBottom: "0.5rem", color: "#60a5fa" }}>Comandos:</h3>
                             <p style={{ margin: "0.2rem 0" }}><b>WASD / Setas</b> : Mover e Girar</p>
                             <p style={{ margin: "0.2rem 0" }}><b>Espaço</b> : Atirar (Frente)</p>
                             <p style={{ margin: "0.2rem 0" }}><b>Q</b> / <b>E</b> : Atirar (Laterais)</p>
