@@ -287,10 +287,17 @@ export class GameApp {
     }
   }
 
+  private playSound(path: string, volume: number = 0.2) {
+    const audio = new Audio(path);
+    audio.volume = volume;
+    audio.play().catch(() => {});
+  }
+
   private shootProjectile(x: number, y: number, rotation: number, isPlayerOwned: boolean) {
     const proj = new Projectile(this.textures.projectile, this.gameContainer, x, y, rotation, isPlayerOwned);
     if (!isPlayerOwned) proj.sprite.tint = 0xff0000;
     this.projectiles.push(proj);
+    this.playSound('/assets/sounds/cannon_fire_1.wav');
   }
 
   private checkCollisions() {

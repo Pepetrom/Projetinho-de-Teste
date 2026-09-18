@@ -63,8 +63,17 @@ export default function App() {
                 setScreen("PAUSE");
             }
         };
+        const handleVisibilityChange = () => {
+            if (document.hidden && screen === "GAME") {
+                setScreen("PAUSE");
+            }
+        };
         window.addEventListener("blur", handleBlur);
-        return () => window.removeEventListener("blur", handleBlur);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            window.removeEventListener("blur", handleBlur);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [screen]);
 
     // Controlls Pause and Resume, changing the gameTime

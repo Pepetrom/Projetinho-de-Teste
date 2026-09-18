@@ -245,13 +245,20 @@ export class Explosion extends Entity {
     super(texs, container);
     this.x = x;
     this.y = y;
+    this.sprite.x = x;
+    this.sprite.y = y;
     
     const animSprite = this.sprite as PIXI.AnimatedSprite;
     animSprite.animationSpeed = 0.15;
     animSprite.loop = false;
     animSprite.onComplete = () => {
       this.isDead = true;
+      this.sprite.destroy();
     };
     animSprite.play();
+
+    const audio = new Audio('/assets/sounds/ship_explosion_1.wav');
+    audio.volume = 0.4;
+    audio.play().catch(() => {});
   }
 }
